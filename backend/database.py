@@ -16,18 +16,12 @@ DATABASE_URL = (
 engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True,
-    pool_recycle=3600,
-    pool_timeout=10,
+    pool_recycle=300,  # Shorter recycle for serverless
+    pool_size=1,       # Smaller pool for serverless
+    max_overflow=0,
 )
 
-# Test connection on startup
-try:
-    with engine.connect() as conn:
-        print(f"✅ Successfully connected to MySQL database: {os.getenv('DB_NAME')}")
-except Exception as e:
-    print(f"❌ DATABASE ERROR: {e}")
-    print("💡 TIP: Verify your MySQL credentials in .env and ensure the database exists.")
-    raise e # Stop the app if MySQL is not available
+# No startup connection test for serverless to speed up cold starts
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

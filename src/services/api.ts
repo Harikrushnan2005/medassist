@@ -55,7 +55,7 @@ export interface AppointmentResponse {
 
 export async function lookupPatient(data: PatientLookupRequest): Promise<PatientLookupResult> {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  const id = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
   try {
     const res = await fetch(`${API_BASE}/patients/lookup`, {
