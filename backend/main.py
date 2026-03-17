@@ -16,7 +16,7 @@ import models
 from database import engine, get_db
 
 # Create tables (for development convenience)
-models.Base.metadata.create_all(bind=engine)
+# models.Base.metadata.create_all(bind=engine) # Disabled for production performance
 
 # Load .env from the same directory as this file
 env_path = os.path.join(os.path.dirname(__file__), '.env')
