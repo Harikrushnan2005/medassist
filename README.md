@@ -1,73 +1,149 @@
-# Welcome to your Lovable project
+# 🏥 MedSchedule - AI-Powered Medical Appointment Bot
 
-## Project info
+MedSchedule is a high-performance, responsive AI-driven chatbot designed to streamline medical appointment scheduling. It features a modern React/Vite frontend and a robust FastAPI backend, with built-in integrations for SMS and Email notifications.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+![Banner](https://images.unsplash.com/photo-1576091160550-217359f4ecf8?auto=format&fit=crop&q=80&w=2070)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## ✨ Key Features
 
-**Use Lovable**
+- **🤖 Interactive Appointment Bot**: A smooth, conversation-driven interface for booking, rescheduling, and cancelling appointments.
+- **🔍 Smart Patient Lookup**: Instantly identifies existing patients or registers new ones.
+- **📅 Real-time Slot Management**: Fetches available provider slots from a MySQL database, supporting both routine and urgent availability.
+- **📱 Multi-channel Notifications**: Automated SMS (via Twilio) and Email (via SMTP) confirmations and reminders.
+- **🎨 Premium UI/UX**: Built with React, Tailwind CSS, Framer Motion, and Shadcn/UI for a seamless user experience.
+- **🐳 Containerized Setup**: Full Docker support for easy local development and deployment.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+### Frontend
+- **Framework**: [React 18](https://reactjs.org/) with [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [Shadcn/UI](https://ui.shadcn.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **State/Data**: [TanStack Query (React Query)](https://tanstack.com/query/latest)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python 3.10+)
+- **Database**: [MySQL](https://www.mysql.com/) with [SQLAlchemy](https://www.sqlalchemy.org/) ORM
+- **Migrations/Seeding**: Custom Python scripts
+- **Messaging**: [Twilio SDK](https://www.twilio.com/docs/libraries/python) (SMS) & SMTP (Email)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 🚀 Quick Start (Docker - Recommended)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+The fastest way to get the full stack running is using Docker Compose.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. **Clone & Navigate**:
+    ```bash
+    git clone <your-repo-url>
+    cd health-appointment-bot
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. **Configure Environment Variables**:
+   Copy `.env.example` (or use the existing `.env` in the `backend/` folder).
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. **Spin up Services**:
+    ```bash
+    docker-compose up -d --build
+    ```
+    This starts:
+    - **MySQL DB** on `localhost:3306`
+    - **FastAPI Backend** on `localhost:8000`
+    - (Frontend can then be run locally via `npm run dev`)
+
+---
+
+## 🛠️ Manual Local Setup
+
+### 1. Prerequisites
+- **Node.js** (v18+)
+- **Python** (v3.10+)
+- **MySQL** (Local instance or Docker container)
+
+### 2. Backend Setup
+```bash
+cd backend
+python -m venv venv
+
+# Activate venv
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initial Seed Data (Optional)
+python seed.py
+
+# Start API
+uvicorn main:app --reload --port 8000
+```
+API Documentation will be available at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+### 3. Frontend Setup
+```bash
+# Return to root
+cd ..
+npm install
 npm run dev
 ```
+The application will be live at [http://localhost:5173](http://localhost:5173).
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📄 Environment Configuration
 
-**Use GitHub Codespaces**
+Create a `.env` file in the `backend/` directory with the following variables:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Variable | Description |
+| :--- | :--- |
+| `DB_HOST` | MySQL hostname (use `localhost` or `db`) |
+| `DB_USER` | MySQL username |
+| `DB_PASSWORD` | MySQL password |
+| `DB_NAME` | Database name (`medschedule`) |
+| `SMTP_SERVER` | SMTP Server (e.g., `smtp.gmail.com`) |
+| `SMTP_PASSWORD` | SMTP App Password |
+| `TWILIO_ACCOUNT_SID`| From Twilio Console |
+| `TWILIO_AUTH_TOKEN` | From Twilio Console |
+| `TWILIO_PHONE_NUMBER`| Your Twilio number |
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## 🔌 API Summary
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/patients/lookup` | Verify or register a patient |
+| `GET` | `/api/slots/available` | Fetch unbooked time slots |
+| `POST` | `/api/appointments` | Book a new appointment |
+| `GET` | `/api/appointments/patient/{id}` | List scheduled appointments for a patient |
+| `PATCH` | `/api/appointments/{id}/cancel` | Cancel an existing appointment |
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 🤝 Contribution
 
-## Can I connect a custom domain to my Lovable project?
+Contributions are welcome! Please feel free to submit a Pull Request or open an Issue.
 
-Yes, you can!
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📄 License
+This project is for demonstration and development purposes. Please ensure HIPAA compliance for production use.
+
+---
+
+### Created by [Antigravity](https://github.com/google-deepmind) for Harikrushnan T.
