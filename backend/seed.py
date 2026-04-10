@@ -41,13 +41,35 @@ def seed_data():
     db.add(models.AvailableSlot(provider_id=p1.id, slot_date=today + timedelta(days=1), slot_time=time(8, 30), is_urgent_eligible=True))
 
     # Existing patient for testing
-    db.add(models.Patient(
+    jane = models.Patient(
         first_name="Jane",
         last_name="Smith",
         date_of_birth=date(1985, 6, 15),
         phone="555-123-4567",
+        email="jane.smith@email.com",
         insurance_provider="Blue Cross",
         is_new_patient=False
+    )
+    db.add(jane)
+    db.commit()
+    db.refresh(jane)
+
+    # Add Patient Services data for Jane Smith
+    db.add(models.Invoice(
+        patient_id=jane.id,
+        amount=85.00,
+        status="pending",
+        description="March 15th, 2026 Office Visit",
+        due_date=date.today() + timedelta(days=15)
+    ))
+
+    db.add(models.PriorAuthorization(
+        patient_id=jane.id,
+        procedure_name="MRI Without Contrast - Lumbar",
+        status="Approved",
+        valid_until=date.today() + timedelta(days=90),
+        auth_number="829104",
+        facility="Radiology Partners Inc."
     ))
 
     db.commit()

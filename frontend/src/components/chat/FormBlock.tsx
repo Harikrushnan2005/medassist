@@ -26,7 +26,7 @@ export const FormBlock = forwardRef<HTMLDivElement, FormBlockProps>(
             {title}
           </h3>
         )}
-        <div className="flex flex-col gap-3">{children}</div>
+        <div className="flex flex-col gap-4 mt-2 mb-1">{children}</div>
       </motion.div>
     );
   }

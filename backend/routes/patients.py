@@ -9,17 +9,32 @@ router = APIRouter(prefix="/patients", tags=["patients"])
 
 @router.post("/lookup", response_model=PatientLookupResult)
 def lookup_patient(data: PatientLookup, db: Session = Depends(get_db)):
-    """Check if patient exists in EHR (database)."""
-    patient = db.query(Patient).filter(
-        Patient.first_name == data.first_name,
-        Patient.last_name == data.last_name,
-        Patient.date_of_birth == data.date_of_birth,
-    ).first()
+    """
+    Production-Level Patient Matching:
+    Using Email as the unique key for identification.
+    """
+    # 1. Check if the Email exists in the database
+    existing_patient = db.query(Patient).filter(Patient.email == data.email).first()
 
-    if patient:
-        return PatientLookupResult(found=True, patient=PatientResponse.model_validate(patient))
+    if existing_patient:
+        # 2. If email exists, verify the name and DOB match
+        match = (
+            existing_patient.first_name.lower() == data.first_name.lower() and
+            existing_patient.last_name.lower() == data.last_name.lower() and
+            str(existing_patient.date_of_birth) == str(data.date_of_birth)
+        )
 
-    # Register as new patient if not found
+        if match:
+            # Happy path: Existing patient verified
+            return PatientLookupResult(found=True, patient=PatientResponse.model_validate(existing_patient))
+        else:
+            # Collision: Email exists but belongs to someone else
+            return PatientLookupResult(
+                found=False, 
+                error="This email is already associated with another patient. Please use a different email or verify your details."
+            )
+
+    # 3. If no email match, onboard as a new patient
     new_patient = Patient(
         first_name=data.first_name,
         last_name=data.last_name,

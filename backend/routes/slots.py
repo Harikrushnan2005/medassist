@@ -14,35 +14,25 @@ def get_available_slots(
     urgency: str = Query("routine"),
     db: Session = Depends(get_db),
 ):
-    """Get available (unbooked) slots. If urgent, return urgent-eligible slots."""
-    # If no future slots exist, generate some for the next 3 days (Production-ready auto-fill)
-    existing_future_slots = db.query(AvailableSlot).filter(AvailableSlot.slot_date >= date.today()).count()
-    if existing_future_slots == 0:
+    today = date.today()
+    
+    existing_unbooked_slots = db.query(AvailableSlot).filter(
+        AvailableSlot.slot_date >= today,
+        AvailableSlot.is_booked == False
+    ).count()
+    
+    if existing_unbooked_slots < 50: # Proactive buffer to ensure we always have enough slots
         from datetime import time, timedelta
         import models
         providers = db.query(models.Provider).all()
-        if not providers:
-            p1 = models.Provider(name="Dr. Sarah Chen", specialty="Internal Medicine")
-            p2 = models.Provider(name="Dr. James Miller", specialty="Family Medicine")
-            db.add(p1)
-            db.add(p2)
-            db.commit()
-            providers = [p1, p2]
         
-        today = date.today()
-        # Specific times requested by the user
-        session_times = [time(10, 0), time(12, 0), time(14, 30), time(16, 0)]
+        # Full day availability
+        session_times = [time(9, 0), time(10, 0), time(11, 0), time(13, 0), time(14, 0), time(15, 0), time(16, 0), time(17, 0)]
         
-        for i in range(1, 4): # Generate for next 3 days to be safe
+        for i in range(0, 8): # Ensure current day + next 7 days have availability
             slot_date = today + timedelta(days=i)
             for p in providers:
                 for s_time in session_times:
-                    # Mark all tomorrow's slots as urgent-eligible for testing/demo
-                    # or just the morning ones for a more realistic feel.
-                    # Let's mark sessions before 2 PM as urgent-eligible for the first 2 days.
-                    is_urgent = (i <= 2 and s_time < time(14, 0))
-                    
-                    # Avoid duplicate entries if running multiple times
                     exists = db.query(models.AvailableSlot).filter_by(
                         provider_id=p.id, 
                         slot_date=slot_date, 
@@ -53,8 +43,8 @@ def get_available_slots(
                         db.add(models.AvailableSlot(
                             provider_id=p.id, 
                             slot_date=slot_date, 
-                            slot_time=s_time, 
-                            is_urgent_eligible=is_urgent
+                            slot_time=s_time,
+                            is_urgent_eligible=False # No longer used for logic, setting default
                         ))
         db.commit()
 
@@ -62,7 +52,9 @@ def get_available_slots(
     today = date.today()
     current_time = now.time()
 
-    query = db.query(AvailableSlot).filter(
+    from models import Provider
+    base_query = db.query(AvailableSlot).join(Provider).filter(
+        Provider.is_active == True,
         AvailableSlot.is_booked == False,
         or_(
             AvailableSlot.slot_date > today,
@@ -71,13 +63,14 @@ def get_available_slots(
                 AvailableSlot.slot_time > current_time
             )
         )
-    )
+    ).order_by(AvailableSlot.slot_date, AvailableSlot.slot_time)
 
     if urgency == "urgent":
-        query = query.filter(AvailableSlot.is_urgent_eligible == True)
-
-    query = query.order_by(AvailableSlot.slot_date, AvailableSlot.slot_time).limit(16)
-    slots = query.all()
+        # Dynamic sliding window: Urgent patients ALWAYS get the first 6 chronologically available slots
+        slots = base_query.limit(6).all()
+    else:
+        # Dynamic sliding window: Routine patients ALWAYS start from the 7th available slot onwards
+        slots = base_query.offset(6).limit(16).all()
 
     return [
         SlotResponse(

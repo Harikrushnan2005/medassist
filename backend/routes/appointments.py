@@ -27,6 +27,9 @@ def create_appointment(data: AppointmentCreate, background_tasks: BackgroundTask
         urgency=data.urgency,
         reason=data.reason,
         insurance=data.insurance,
+        price=data.price,
+        payment_status=data.payment_status,
+        consent_signed=data.consent_signed
     )
     slot.is_booked = True
     db.add(appointment)
@@ -58,12 +61,18 @@ def create_appointment(data: AppointmentCreate, background_tasks: BackgroundTask
 
 @router.get("/patient/{patient_id}", response_model=list[AppointmentResponse])
 def get_patient_appointments(patient_id: int, db: Session = Depends(get_db)):
-    """Get all appointments for a patient."""
-    return db.query(Appointment).options(
+    """Get upcoming appointments for a patient."""
+    from datetime import datetime
+    now = datetime.now()
+    today = now.date()
+    current_time = now.time()
+
+    return db.query(Appointment).join(AvailableSlot).options(
         joinedload(Appointment.slot).joinedload(AvailableSlot.provider)
     ).filter(
         Appointment.patient_id == patient_id,
         Appointment.status == "scheduled",
+        (AvailableSlot.slot_date > today) | ((AvailableSlot.slot_date == today) & (AvailableSlot.slot_time > current_time))
     ).all()
 
 

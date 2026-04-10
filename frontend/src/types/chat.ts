@@ -27,9 +27,21 @@ export type ConversationStep =
   | "SELECT_URGENCY"
   | "COLLECT_INSURANCE"
   | "SELECT_SLOT"
+  | "UPLOAD_ID"
+  | "SIGN_CONSENT"
+  | "PAYMENT"
   | "CONFIRM"
   | "CONFIRMED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "CONSENT_FORMS"
+  | "SIDEBAR_ACTION"
+  | "LIVE_CHAT";
+
+import { 
+  type AppointmentResponse, 
+  type Invoice, 
+  type PriorAuthorization 
+} from "@/services/api";
 
 export interface Message {
   id: string;
@@ -39,9 +51,10 @@ export interface Message {
   options?: string[];
   slots?: TimeSlot[];
   appointments?: AppointmentResponse[];
+  invoices?: Invoice[];
+  authorizations?: PriorAuthorization[];
 }
 
-import { type AppointmentResponse } from "@/services/api";
 
 export interface TimeSlot {
   id: string;

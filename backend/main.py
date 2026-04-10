@@ -11,18 +11,28 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 
 
-from routes import patients, slots, appointments
+from routes import patients, slots, appointments, patient_services, payments, admin, chat
 import models
 from database import engine, get_db
 
 # Create tables (for development convenience)
-# models.Base.metadata.create_all(bind=engine) # Disabled for production performance
+models.Base.metadata.create_all(bind=engine) 
 
 # Load .env from the same directory as this file
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(env_path)
 
-origins = ["*"]
+# Allowed origins for CORS
+origins = [
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:8081",
+    "https://*.vercel.app",  # Allow all Vercel subdomains
+]
+
+# Allow all origins in production for simplicity if VERCEL env is set
+if os.getenv("VERCEL"):
+    origins = ["*"]
 
 app = FastAPI(title="MedSchedule API", version="1.0.0")
 
@@ -41,6 +51,10 @@ api_prefix = "/api"
 app.include_router(patients.router, prefix=api_prefix)
 app.include_router(slots.router, prefix=api_prefix)
 app.include_router(appointments.router, prefix=api_prefix)
+app.include_router(patient_services.router, prefix=api_prefix)
+app.include_router(payments.router, prefix=api_prefix)
+app.include_router(admin.router, prefix=api_prefix)
+app.include_router(chat.router, prefix=api_prefix)
 
 
 @app.exception_handler(Exception)

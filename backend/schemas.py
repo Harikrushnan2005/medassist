@@ -28,6 +28,7 @@ class PatientResponse(BaseModel):
 class PatientLookupResult(BaseModel):
     found: bool
     patient: Optional[PatientResponse] = None
+    error: Optional[str] = None
 
 
 # --- Slots ---
@@ -69,6 +70,9 @@ class AppointmentCreate(BaseModel):
     urgency: str     # "urgent" | "routine"
     reason: str
     insurance: Optional[str] = None
+    price: float
+    payment_status: Optional[str] = "pending"
+    consent_signed: Optional[bool] = False
 
 
 class AppointmentResponse(BaseModel):
@@ -79,7 +83,58 @@ class AppointmentResponse(BaseModel):
     urgency: str
     reason: str
     insurance: Optional[str] = None
+    price: float
+    payment_status: str
+    consent_signed: bool
     status: str
     slot: Optional[SlotResponse] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+# --- Invoices ---
+class InvoiceResponse(BaseModel):
+    id: int
+    patient_id: int
+    amount: float
+    status: str
+    description: Optional[str] = None
+    due_date: Optional[date] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class PayInvoiceRequest(BaseModel):
+    payment_method: str = "stripe"
+
+# --- PreVisitForm ---
+class PreVisitFormCreate(BaseModel):
+    patient_id: int
+    symptoms: Optional[str] = None
+    allergies: Optional[str] = None
+    medications: Optional[str] = None
+
+class PreVisitFormResponse(PreVisitFormCreate):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+# --- Documents ---
+class DocumentResponse(BaseModel):
+    id: int
+    patient_id: int
+    file_name: str
+    file_type: Optional[str] = None
+    extracted_data: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+# --- Prior Authorization ---
+class PriorAuthorizationResponse(BaseModel):
+    id: int
+    patient_id: int
+    procedure_name: str
+    status: str
+    valid_until: Optional[date] = None
+    auth_number: Optional[str] = None
+    facility: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

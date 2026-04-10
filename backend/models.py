@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, Boolean, Text, Enum, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Date, Time, Boolean, Text, Enum, ForeignKey, TIMESTAMP, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -12,7 +12,7 @@ class Patient(Base):
     last_name = Column(String(100), nullable=False)
     date_of_birth = Column(Date, nullable=False)
     phone = Column(String(20))
-    email = Column(String(150))
+    email = Column(String(150), unique=True, index=True)
     insurance_provider = Column(String(100))
     is_new_patient = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
@@ -56,9 +56,89 @@ class Appointment(Base):
     urgency = Column(Enum("urgent", "routine"), nullable=False)
     reason = Column(Text, nullable=False)
     insurance = Column(String(100))
+    price = Column(Float, default=0.0)
+    payment_status = Column(Enum("pending", "paid"), default="pending")
+    consent_signed = Column(Boolean, default=False)
     status = Column(Enum("scheduled", "cancelled", "completed", "rescheduled"), default="scheduled")
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     patient = relationship("Patient", back_populates="appointments")
     slot = relationship("AvailableSlot", back_populates="appointment")
+
+
+class Invoice(Base):
+    __tablename__ = "invoices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    amount = Column(Float, nullable=False)
+    status = Column(Enum("pending", "paid"), default="pending")
+    description = Column(String(255))
+    due_date = Column(Date)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    patient = relationship("Patient", backref="invoices")
+
+
+class PreVisitForm(Base):
+    __tablename__ = "pre_visit_forms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    symptoms = Column(Text)
+    allergies = Column(Text)
+    medications = Column(Text)
+    submitted_at = Column(TIMESTAMP, server_default=func.now())
+
+    patient = relationship("Patient", backref="forms")
+
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    file_name = Column(String(255), nullable=False)
+    file_type = Column(String(50))
+    file_path = Column(String(500), nullable=False)
+    extracted_data = Column(Text)
+    uploaded_at = Column(TIMESTAMP, server_default=func.now())
+
+    patient = relationship("Patient", backref="documents")
+
+
+class PriorAuthorization(Base):
+    __tablename__ = "prior_authorizations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    procedure_name = Column(String(255), nullable=False)
+    status = Column(Enum("Approved", "Pending", "Denied"), default="Pending")
+    valid_until = Column(Date)
+    auth_number = Column(String(100))
+    facility = Column(String(255))
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    patient = relationship("Patient", backref="authorizations")
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    action = Column(String(255), nullable=False)
+    module = Column(String(100), nullable=False)  # e.g., "Staff", "Appointments", "BAA"
+    details = Column(Text)
+    ip_address = Column(String(50))
+    logged_at = Column(TIMESTAMP, server_default=func.now())
+
+
+class ConsentForm(Base):
+    __tablename__ = "consent_forms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    form_key = Column(String(50), unique=True, index=True, nullable=False) # 'hipaa', 'financial', 'telehealth'
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())

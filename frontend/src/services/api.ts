@@ -22,6 +22,7 @@ export interface PatientLookupRequest {
 export interface PatientLookupResult {
   found: boolean;
   patient: Patient | null;
+  error?: string;
 }
 
 export interface SlotResponse {
@@ -39,6 +40,9 @@ export interface AppointmentCreateRequest {
   urgency: "urgent" | "routine";
   reason: string;
   insurance?: string;
+  price: number;
+  payment_status?: string;
+  consent_signed?: boolean;
 }
 
 export interface AppointmentResponse {
@@ -50,7 +54,44 @@ export interface AppointmentResponse {
   reason: string;
   insurance: string | null;
   status: string;
+  price: number;
+  payment_status: string;
+  consent_signed: boolean;
   slot?: SlotResponse;
+}
+
+export interface Invoice {
+  id: number;
+  patient_id: number;
+  amount: number;
+  status: "pending" | "paid";
+  description: string;
+  due_date: string;
+}
+
+export interface PriorAuthorization {
+  id: number;
+  patient_id: number;
+  procedure_name: string;
+  status: "Approved" | "Pending" | "Denied";
+  valid_until: string | null;
+  auth_number: string | null;
+  facility: string | null;
+}
+
+export interface PreVisitFormCreate {
+  patient_id: number;
+  symptoms?: string;
+  allergies?: string;
+  medications?: string;
+}
+
+export interface DocumentResponse {
+  id: number;
+  patient_id: number;
+  file_name: string;
+  file_type: string | null;
+  extracted_data: string | null;
 }
 
 export async function lookupPatient(data: PatientLookupRequest): Promise<PatientLookupResult> {
@@ -108,5 +149,49 @@ export async function rescheduleAppointment(appointmentId: number, newSlotId: nu
     method: "PATCH",
   });
   if (!res.ok) throw new Error("Failed to reschedule appointment");
+  return res.json();
+}
+
+export async function getInvoices(patientId: number): Promise<Invoice[]> {
+  const res = await fetch(`${API_BASE}/patients/${patientId}/invoices`);
+  if (!res.ok) throw new Error("Failed to fetch invoices");
+  return res.json();
+}
+
+export async function payInvoice(invoiceId: number): Promise<Invoice> {
+  const res = await fetch(`${API_BASE}/invoices/${invoiceId}/pay`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ payment_method: "stripe" }),
+  });
+  if (!res.ok) throw new Error("Failed to pay invoice");
+  return res.json();
+}
+
+export async function getAuthorizations(patientId: number): Promise<PriorAuthorization[]> {
+  const res = await fetch(`${API_BASE}/patients/${patientId}/authorizations`);
+  if (!res.ok) throw new Error("Failed to fetch authorizations");
+  return res.json();
+}
+
+export async function submitIntakeForm(data: PreVisitFormCreate): Promise<any> {
+    const res = await fetch(`${API_BASE}/patients/${data.patient_id}/forms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to submit intake form");
+    return res.json();
+}
+
+export async function uploadPatientDocument(patientId: number, file: File): Promise<DocumentResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  
+  const res = await fetch(`${API_BASE}/patients/${patientId}/documents`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) throw new Error("Failed to upload document");
   return res.json();
 }
