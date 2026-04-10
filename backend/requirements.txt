@@ -8,4 +8,4 @@ pydantic-settings==2.5.0
 twilio==9.3.2
 cryptography==43.0.1
 python-multipart==0.0.12
-stripe==10.15.0
+stripe>=11.0.0
