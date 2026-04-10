@@ -9,4 +9,10 @@ if backend_dir not in sys.path:
     sys.path.append(backend_dir)
 
 # Import the FastAPI app from backend/main.py
-from main import app
+try:
+    from main import app
+except Exception as e:
+    print(f"CRITICAL: Failed to import FastAPI app from backend/main.py: {e}")
+    import traceback
+    traceback.print_exc()
+    raise e
