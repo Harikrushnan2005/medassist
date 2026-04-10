@@ -8,17 +8,21 @@ load_dotenv()
 
 # Database Configuration
 # Using PyMySQL as the driver for MySQL
-DATABASE_URL = (
-    f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-)
+# Database Configuration with Safety Fallback for Deployment
+db_host = os.getenv('DB_HOST')
+if db_host:
+    DATABASE_URL = (
+        f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+        f"@{db_host}:{os.getenv('DB_PORT', '3306')}/{os.getenv('DB_NAME')}"
+    )
+else:
+    # Use a dummy SQLite URL just to allow the app to boot in Vercel during build/check
+    DATABASE_URL = "sqlite:///./temp.db"
 
 engine = create_engine(
     DATABASE_URL, 
-    pool_pre_ping=True,
-    pool_recycle=300,  # Shorter recycle for serverless
-    pool_size=1,       # Smaller pool for serverless
-    max_overflow=0,
+    pool_pre_ping=True if db_host else False,
+    # Standard settings for serverless
 )
 
 # No startup connection test for serverless to speed up cold starts
