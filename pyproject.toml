@@ -1,0 +1,22 @@
+[project]
+name = "medassist"
+version = "0.1.0"
+description = "MedSchedule AI Appointment Bot"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "sqlalchemy",
+    "pymysql",
+    "python-dotenv",
+    "pydantic",
+    "twilio",
+    "stripe",
+    "python-multipart"
+]
+
+[tool.setuptools]
+package-dir = {"" = "backend"}
+
+[project.scripts]
+app = "main:app"
