@@ -15,12 +15,18 @@ from routes import patients, slots, appointments, patient_services, payments, ad
 import models
 from database import engine, get_db
 
-# Create tables (for development convenience)
-models.Base.metadata.create_all(bind=engine) 
+# Load environment variables
+load_dotenv()
 
-# Load .env from the same directory as this file
-env_path = os.path.join(os.path.dirname(__file__), '.env')
-load_dotenv(env_path)
+# Create tables safely
+try:
+    import models
+    from database import engine
+    # In Vercel serverless, we only create tables if the engine is properly configured
+    if os.getenv('DB_HOST'):
+        models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Database initialization skipped or failed: {e}")
 
 # Allowed origins for CORS
 origins = [
