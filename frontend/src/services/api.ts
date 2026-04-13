@@ -1,8 +1,13 @@
 export const getApiBase = () => {
-  const url = import.meta.env.VITE_API_URL;
+  let url = import.meta.env.VITE_API_URL;
   if (!url) return "/api";
+  
+  // Fix for Render providing internal hostnames without TLD
+  if (!url.includes(".") && !url.includes("localhost")) {
+    url = `${url}.onrender.com`;
+  }
+
   if (url.startsWith("http")) return url + "/api";
-  // On Render, the 'host' property is just the domain
   return `https://${url}/api`;
 };
 export const API_BASE = getApiBase();
