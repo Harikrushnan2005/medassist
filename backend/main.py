@@ -28,26 +28,38 @@ try:
 except Exception as e:
     print(f"Database initialization skipped or failed: {e}")
 
-# Allowed origins for CORS
+# Allowed origins for CORS - include local and production defaults
 default_origins = [
     "http://localhost:5173",
     "http://localhost:8080",
     "http://localhost:8081",
-    "https://*.vercel.app",  # Allow all Vercel subdomains
+    "http://localhost:3000",
 ]
 
 # Get origins from environment variable if provided
 env_origins = os.getenv("CORS_ORIGINS")
 if env_origins:
-    origins = [origin.strip() for origin in env_origins.split(",")]
+    if env_origins.lower() == "all" or env_origins == "*":
+        origins = ["*"]
+    else:
+        origins = [origin.strip() for origin in env_origins.split(",")]
 else:
     origins = default_origins
 
-# Allow all origins in production for simplicity if VERCEL or RENDER env is set
-if os.getenv("VERCEL") or os.getenv("RENDER"):
-    # Note: In high-security environments, you should explicitly list your frontend domains
-    if not env_origins:
-        origins = ["*"]
+# Regex for subdomains (Vercel/Render)
+origin_regex = None
+is_prod = os.getenv("VERCEL") or os.getenv("RENDER") or os.getenv("NODE_ENV") == "production"
+
+if is_prod:
+    # If in production and no specific origins are set besides localhost, 
+    # allow all or use regex for security
+    if len(origins) <= 4 and "*" not in origins:
+        # For Render/Vercel, we can allow their subdomains securely
+        origin_regex = r"https://.*\.vercel\.app|https://.*\.onrender\.com"
+        # Also add the specific frontend URL if we know it
+        frontend_url = "https://medschedule-frontend-oah1.onrender.com"
+        if frontend_url not in origins:
+             origins.append(frontend_url)
 
 app = FastAPI(title="MedSchedule API", version="1.0.0")
 
@@ -55,7 +67,8 @@ app = FastAPI(title="MedSchedule API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True if origins != ["*"] else False,
+    allow_origin_regex=origin_regex,
+    allow_credentials=True if "*" not in origins else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

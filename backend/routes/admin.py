@@ -18,10 +18,14 @@ def verify_admin(token: str = Query(...)):
     return True
 
 def log_action(db: Session, action: str, module: str, details: str, request: Request = None):
-    ip = request.client.host if request and request.client else "System"
-    log = AuditLog(action=action, module=module, details=details, ip_address=ip)
-    db.add(log)
-    db.commit()
+    try:
+        ip = request.client.host if request and request.client else "System"
+        log = AuditLog(action=action, module=module, details=details, ip_address=ip)
+        db.add(log)
+        db.commit()
+    except Exception as e:
+        print(f"Warning: Failed to log audit action {action}: {e}")
+        db.rollback()
 
 def ensure_consent_forms(db: Session):
     defaults = [
