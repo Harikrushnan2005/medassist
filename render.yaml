@@ -32,7 +32,7 @@ services:
   # --------------------------------------------------------------------------
   # FRONTEND: React (Vite) Static Site
   # --------------------------------------------------------------------------
-  - type: static
+  - type: web
     name: medschedule-frontend
     env: static
     buildCommand: cd frontend && npm install && npm run build
