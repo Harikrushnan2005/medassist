@@ -22,6 +22,7 @@ else:
 engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True if db_host else False,
+    pool_recycle=3600 if db_host else -1, # recycle connections after 1 hr to avoid stale connections
     # Standard settings for serverless
 )
 
