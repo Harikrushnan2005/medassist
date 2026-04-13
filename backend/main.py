@@ -51,11 +51,11 @@ if os.getenv("VERCEL") or os.getenv("RENDER"):
 
 app = FastAPI(title="MedSchedule API", version="1.0.0")
 
-# CORS configuration
+# CORS configuration - robust for production and local dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=True if origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
