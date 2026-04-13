@@ -1,11 +1,11 @@
-const getApiBase = () => {
+export const getApiBase = () => {
   const url = import.meta.env.VITE_API_URL;
   if (!url) return "/api";
   if (url.startsWith("http")) return url + "/api";
   // On Render, the 'host' property is just the domain
   return `https://${url}/api`;
 };
-const API_BASE = getApiBase();
+export const API_BASE = getApiBase();
 
 export interface Patient {
   id: number;

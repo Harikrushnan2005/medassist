@@ -15,6 +15,7 @@ import { ProviderRulesDashboard, BAAComplianceDashboard } from "@/components/cha
 import { useNavigate } from "react-router-dom";
 import { type Message } from "@/types/chat";
 import { useChatbot } from "@/hooks/useChatbot";
+import { API_BASE } from "@/services/api";
 
 function SchedulingChat() {
   const [showConsentModal, setShowConsentModal] = useState(false);
@@ -777,7 +778,7 @@ function DoctorAvailabilityView() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch("/api/providers/status");
+        const res = await fetch(`${API_BASE}/providers/status`);
         if (res.ok) {
           const data = await res.json();
           setDoctors(data);

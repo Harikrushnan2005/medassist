@@ -19,6 +19,7 @@ import {
   getAuthorizations,
   submitIntakeForm,
   uploadPatientDocument,
+  API_BASE,
   type AppointmentResponse,
   type Invoice,
   type PriorAuthorization
@@ -581,9 +582,8 @@ export function useChatbot() {
       });
       addMessage({ type: "action-buttons", formType: "handoff-card" });
       
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const host = "localhost:8000"; // Assuming backend is on 8000
-      const wsUrl = `${protocol}//${host}/api/chat/ws/${newRoomId}`;
+      const urlHost = API_BASE.startsWith('http') ? new URL(API_BASE).host : window.location.host;
+      const wsUrl = `${protocol}//${urlHost}/chat/ws/${newRoomId}`;
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -728,7 +728,7 @@ export function useChatbot() {
     
     try {
       // Create Stripe session
-      const res = await fetch("/api/payments/create-checkout-session", {
+      const res = await fetch(`${API_BASE}/payments/create-checkout-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

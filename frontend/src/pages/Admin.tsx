@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ProviderRulesDashboard, BAAComplianceDashboard, ConsentFormDashboard } from "@/components/chat/AdminDashboards";
+import { API_BASE } from "@/services/api";
 
 const ADMIN_STORAGE_KEY = "medassist_admin_token";
 
@@ -52,7 +53,7 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
 
   const verifyToken = async (token: string) => {
     try {
-      const res = await fetch(`/api/admin/dashboard-stats?token=${token}`);
+      const res = await fetch(`${API_BASE}/admin/dashboard-stats?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setStats(data);
@@ -73,7 +74,7 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
       if (activeTab === "live_chat" && isAuthenticated) {
         const fetchRooms = async () => {
           try {
-            const res = await fetch("/api/chat/rooms");
+            const res = await fetch(`${API_BASE}/chat/rooms`);
             if (res.ok) {
               const data = await res.json();
               setActiveRooms(data.rooms);
@@ -123,7 +124,7 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch(`${API_BASE}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password })
@@ -144,7 +145,7 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
 
   const fetchAppointments = async (token: string) => {
     try {
-      const res = await fetch(`/api/admin/appointments?token=${token}`);
+      const res = await fetch(`${API_BASE}/admin/appointments?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setAppointments(data);
@@ -157,7 +158,7 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
   const updateStatus = async (id: number, status: string) => {
     const token = sessionStorage.getItem(ADMIN_STORAGE_KEY);
     try {
-      const res = await fetch(`/api/admin/appointments/${id}/status?status=${status}&token=${token}`, {
+      const res = await fetch(`${API_BASE}/admin/appointments/${id}/status?status=${status}&token=${token}`, {
         method: "POST"
       });
       if (res.ok) {

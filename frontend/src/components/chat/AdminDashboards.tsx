@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Users, Lock, Shield, Settings, Server, Activity, CheckCircle2, FileText, BadgeCheck, Zap, Globe, Cpu, AlertCircle, ExternalLink, Download, Clock, Plus, Trash2, Edit2, ToggleLeft, ToggleRight, CalendarDays, X, Check, FileCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_BASE } from "@/services/api";
 
 const ADMIN_STORAGE_KEY = "medassist_admin_token";
 
@@ -22,7 +23,7 @@ export function ProviderRulesDashboard() {
 
   const fetchProviders = async () => {
     try {
-      const res = await fetch(`/api/admin/providers?token=${token}`);
+      const res = await fetch(`${API_BASE}/admin/providers?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setProviders(data);
@@ -34,7 +35,7 @@ export function ProviderRulesDashboard() {
 
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
     try {
-      await fetch(`/api/admin/providers/${id}?token=${token}`, {
+      await fetch(`${API_BASE}/admin/providers/${id}?token=${token}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_active: !currentStatus })
@@ -46,7 +47,7 @@ export function ProviderRulesDashboard() {
   const handleAddProvider = async () => {
     if (!newName) return;
     try {
-      const res = await fetch(`/api/admin/providers?token=${token}`, {
+      const res = await fetch(`${API_BASE}/admin/providers?token=${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName, specialty: newSpecialty })
@@ -63,7 +64,7 @@ export function ProviderRulesDashboard() {
   const handleDeleteProvider = async (id: number) => {
     if (!confirm("Are you sure you want to remove this doctor? This will affect their scheduled slots.")) return;
     try {
-      await fetch(`/api/admin/providers/${id}?token=${token}`, { method: "DELETE" });
+      await fetch(`${API_BASE}/admin/providers/${id}?token=${token}`, { method: "DELETE" });
       fetchProviders();
     } catch (e) {}
   };
@@ -71,7 +72,7 @@ export function ProviderRulesDashboard() {
   const fetchSlots = async (providerId: number) => {
     setActiveSlotId(providerId);
     try {
-      const res = await fetch(`/api/admin/slots/${providerId}?token=${token}`);
+      const res = await fetch(`${API_BASE}/admin/slots/${providerId}?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedProviderSlots(data);
@@ -81,7 +82,7 @@ export function ProviderRulesDashboard() {
 
   const handleAddSlot = async (providerId: number) => {
      try {
-       await fetch(`/api/admin/slots?token=${token}`, {
+       await fetch(`${API_BASE}/admin/slots?token=${token}`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ 
@@ -96,7 +97,7 @@ export function ProviderRulesDashboard() {
 
   const handleDeleteSlot = async (slotId: number, providerId: number) => {
      try {
-       await fetch(`/api/admin/slots/${slotId}?token=${token}`, { method: "DELETE" });
+       await fetch(`${API_BASE}/admin/slots/${slotId}?token=${token}`, { method: "DELETE" });
        fetchSlots(providerId);
      } catch (e) {}
   };
@@ -323,7 +324,7 @@ export function BAAComplianceDashboard() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch(`/api/admin/audit-logs?token=${token}`);
+      const res = await fetch(`${API_BASE}/admin/audit-logs?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setLogs(data);
@@ -334,7 +335,7 @@ export function BAAComplianceDashboard() {
   useEffect(() => { fetchLogs(); }, []);
 
   const handleDownloadBAA = () => {
-    window.open(`/api/admin/baa/download?token=${token}`, '_blank');
+    window.open(`${API_BASE}/admin/baa/download?token=${token}`, '_blank');
   };
 
   return (
@@ -505,7 +506,7 @@ export function ConsentFormDashboard() {
 
   const fetchForms = async () => {
     try {
-      const res = await fetch(`/api/admin/consent-forms?token=${token}`);
+      const res = await fetch(`${API_BASE}/admin/consent-forms?token=${token}`);
       if (res.ok) {
         const data = await res.json();
         setForms(data);
@@ -528,7 +529,7 @@ export function ConsentFormDashboard() {
     if (!selectedKey) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/admin/consent-forms/${selectedKey}?token=${token}`, {
+      const res = await fetch(`${API_BASE}/admin/consent-forms/${selectedKey}?token=${token}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: editTitle, content: editContent })
