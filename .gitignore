@@ -2,7 +2,7 @@
 node_modules/
 .npm
 backend/venv/
-backend/__pycache__/
+**/__pycache__/
 frontend/node_modules/
 frontend/dist/
 
