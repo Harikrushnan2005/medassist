@@ -582,8 +582,9 @@ export function useChatbot() {
       });
       addMessage({ type: "action-buttons", formType: "handoff-card" });
       
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const urlHost = API_BASE.startsWith('http') ? new URL(API_BASE).host : window.location.host;
-      const wsUrl = `${protocol}//${urlHost}/chat/ws/${newRoomId}`;
+      const wsUrl = `${protocol}//${urlHost}/api/chat/ws/${newRoomId}`;
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
