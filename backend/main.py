@@ -90,7 +90,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/")
+@app.get("/", methods=["GET", "HEAD"])
 def health_check(db: Session = Depends(get_db)):
     try:
         # Simple query to test DB
