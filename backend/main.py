@@ -97,20 +97,32 @@ app.include_router(chat.router, prefix=api_prefix)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    # If it's an HTTPException, preserve its status code and details
-    if isinstance(exc, HTTPException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"detail": exc.detail},
-        )
-    
     # Log the full exception for production debugging
     import logging
-    logging.error(f"Global error: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "An internal server error occurred. Please try again later."},
+    logging.error(f"Global error on {request.url.path}: {exc}", exc_info=True)
+    
+    # If it's an HTTPException, preserve its status code and details
+    if isinstance(exc, HTTPException):
+        content = {"detail": exc.detail}
+        status_code = exc.status_code
+    else:
+        content = {"detail": f"An internal server error occurred: {str(exc)}"}
+        status_code = 500
+        
+    response = JSONResponse(
+        status_code=status_code,
+        content=content,
     )
+    
+    # Manual CORS header injection for error responses to ensure browser sees them
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    
+    return response
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
