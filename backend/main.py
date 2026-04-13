@@ -73,6 +73,16 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+# Cache-Control middleware to prevent 304s on API routes during development/testing
+@app.middleware("http")
+async def add_no_cache_header(request: Request, call_next):
+    response = await call_next(request)
+    if "/api" in request.url.path:
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 # Root API prefix
 api_prefix = "/api"
 
