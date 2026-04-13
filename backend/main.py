@@ -29,16 +29,25 @@ except Exception as e:
     print(f"Database initialization skipped or failed: {e}")
 
 # Allowed origins for CORS
-origins = [
+default_origins = [
     "http://localhost:5173",
     "http://localhost:8080",
     "http://localhost:8081",
     "https://*.vercel.app",  # Allow all Vercel subdomains
 ]
 
-# Allow all origins in production for simplicity if VERCEL env is set
-if os.getenv("VERCEL"):
-    origins = ["*"]
+# Get origins from environment variable if provided
+env_origins = os.getenv("CORS_ORIGINS")
+if env_origins:
+    origins = [origin.strip() for origin in env_origins.split(",")]
+else:
+    origins = default_origins
+
+# Allow all origins in production for simplicity if VERCEL or RENDER env is set
+if os.getenv("VERCEL") or os.getenv("RENDER"):
+    # Note: In high-security environments, you should explicitly list your frontend domains
+    if not env_origins:
+        origins = ["*"]
 
 app = FastAPI(title="MedSchedule API", version="1.0.0")
 

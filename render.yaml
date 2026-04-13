@@ -1,0 +1,49 @@
+services:
+  # --------------------------------------------------------------------------
+  # BACKEND: FastAPI + MySQL (External)
+  # --------------------------------------------------------------------------
+  - type: web
+    name: medschedule-backend
+    env: docker
+    dockerContext: .
+    dockerfilePath: backend/Dockerfile
+    plan: free # or your preferred plan
+    region: ohio # closest to your DB if using Aiven/PlanetScale
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: CORS_ORIGINS
+        value: "*" # Update this with your frontend URL later for better security
+      - key: RENDER
+        value: "true"
+      # These should be set in the Render Dashboard as Secret Files or manual Env Vars:
+      # - key: DB_HOST
+      # - key: DB_USER
+      # - key: DB_PASSWORD
+      # - key: DB_NAME
+      # - key: TWILIO_ACCOUNT_SID
+      # - key: TWILIO_AUTH_TOKEN
+      # - key: TWILIO_PHONE_NUMBER
+      # - key: SMTP_SERVER
+      # - key: SMTP_USER
+      # - key: SMTP_PASSWORD
+
+  # --------------------------------------------------------------------------
+  # FRONTEND: React (Vite) Static Site
+  # --------------------------------------------------------------------------
+  - type: static
+    name: medschedule-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: medschedule-backend
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
