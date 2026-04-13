@@ -34,6 +34,7 @@ default_origins = [
     "http://localhost:8080",
     "http://localhost:8081",
     "http://localhost:3000",
+    "https://medschedule-frontend-oah1.onrender.com", # Hardcoded priority
 ]
 
 # Get origins from environment variable if provided
@@ -47,19 +48,17 @@ else:
     origins = default_origins
 
 # Regex for subdomains (Vercel/Render)
-origin_regex = None
+origin_regex = r"https://.*\.vercel\.app|https://.*\.onrender\.com"
 is_prod = os.getenv("VERCEL") or os.getenv("RENDER") or os.getenv("NODE_ENV") == "production"
 
 if is_prod:
-    # If in production and no specific origins are set besides localhost, 
-    # allow all or use regex for security
-    if len(origins) <= 4 and "*" not in origins:
-        # For Render/Vercel, we can allow their subdomains securely
-        origin_regex = r"https://.*\.vercel\.app|https://.*\.onrender\.com"
-        # Also add the specific frontend URL if we know it
-        frontend_url = "https://medschedule-frontend-oah1.onrender.com"
-        if frontend_url not in origins:
-             origins.append(frontend_url)
+    print(f"Starting in PRODUCTION mode. Origins: {origins}")
+    # In production, if we're seeing persistent CORS issues, default to wildcard 
+    # but be aware of credentials restriction
+    if not env_origins and len(origins) <= 5:
+        origins = ["*"]
+else:
+    print(f"Starting in DEVELOPMENT mode. Origins: {origins}")
 
 app = FastAPI(title="MedSchedule API", version="1.0.0")
 
@@ -67,10 +66,11 @@ app = FastAPI(title="MedSchedule API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=origin_regex,
+    allow_origin_regex=origin_regex if "*" not in origins else None,
     allow_credentials=True if "*" not in origins else False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Root API prefix
