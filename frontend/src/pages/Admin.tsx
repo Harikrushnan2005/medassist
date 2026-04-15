@@ -92,7 +92,8 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
       if (currentRoom) {
         setChatMessages([]);
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = `${protocol}//localhost:8000/api/chat/ws/${currentRoom}`;
+        const urlHost = API_BASE.startsWith('http') ? new URL(API_BASE).host : window.location.host;
+        const wsUrl = `${protocol}//${urlHost}/api/chat/ws/${currentRoom}`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
         
