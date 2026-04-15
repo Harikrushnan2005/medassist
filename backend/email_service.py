@@ -90,8 +90,14 @@ def send_confirmation_email(recipient_email: str, appointment_details: dict, msg
             msg.attach(MIMEText(message_body, 'plain'))
             msg.attach(MIMEText(html_body, 'html'))
 
-            server = smtplib.SMTP(str(SMTP_SERVER), int(SMTP_PORT or 587))
-            server.starttls()
+            if int(SMTP_PORT) == 465:
+                # Use SSL for Port 465
+                server = smtplib.SMTP_SSL(str(SMTP_SERVER), 465)
+            else:
+                # Use STARTTLS for Port 587
+                server = smtplib.SMTP(str(SMTP_SERVER), int(SMTP_PORT or 587))
+                server.starttls()
+            
             server.login(str(SMTP_USER), str(SMTP_PASSWORD).replace(" ", ""))
             server.send_message(msg)
             server.quit()
