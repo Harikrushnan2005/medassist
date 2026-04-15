@@ -56,8 +56,18 @@ def get_available_slots(
                         continue # Skip to the next slot
         db.commit()
 
-    now = datetime.now()
-    today = date.today()
+    from datetime import timezone, timedelta
+    import os
+    
+    # Get practice timezone offset from env, default to 0 (UTC)
+    try:
+        offset_hours = float(os.getenv("PRACTICE_TZ_OFFSET", "0"))
+    except ValueError:
+        offset_hours = 0
+        
+    practice_tz = timezone(timedelta(hours=offset_hours))
+    now = datetime.now(practice_tz)
+    today = now.date()
     current_time = now.time()
 
     from models import Provider

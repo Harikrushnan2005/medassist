@@ -5,8 +5,17 @@ from database import get_db
 from models import Appointment, Patient, AvailableSlot, Provider, Invoice, AuditLog, ConsentForm
 from schemas import AppointmentResponse, PatientResponse, SlotResponse
 from typing import List, Dict, Any
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 import os
+
+# Helper for timezone-aware time
+def get_practice_now():
+    try:
+        offset_hours = float(os.getenv("PRACTICE_TZ_OFFSET", "0"))
+    except ValueError:
+        offset_hours = 0
+    practice_tz = timezone(timedelta(hours=offset_hours))
+    return datetime.now(practice_tz)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -52,7 +61,8 @@ def admin_login(payload: Dict[str, str], request: Request, db: Session = Depends
 @router.get("/dashboard-stats")
 def get_admin_stats(db: Session = Depends(get_db), verified: bool = Depends(verify_admin)):
     ensure_consent_forms(db) # Auto-seed legal templates if missing
-    today = date.today()
+    pn = get_practice_now()
+    today = pn.date()
     
     total_appointments = db.query(Appointment).count()
     upcoming_today = db.query(Appointment).join(AvailableSlot, Appointment.slot_id == AvailableSlot.id).filter(AvailableSlot.slot_date == today).count()
@@ -137,9 +147,9 @@ def delete_provider(provider_id: int, request: Request, db: Session = Depends(ge
 
 @router.get("/slots/{provider_id}")
 def get_provider_slots(provider_id: int, db: Session = Depends(get_db), verified: bool = Depends(verify_admin)):
-    now = datetime.now()
-    today = date.today()
-    current_time = now.time()
+    pn = get_practice_now()
+    today = pn.date()
+    current_time = pn.time()
 
     slots = db.query(AvailableSlot).filter(
         AvailableSlot.provider_id == provider_id,

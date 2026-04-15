@@ -62,8 +62,16 @@ def create_appointment(data: AppointmentCreate, background_tasks: BackgroundTask
 @router.get("/patient/{patient_id}", response_model=list[AppointmentResponse])
 def get_patient_appointments(patient_id: int, db: Session = Depends(get_db)):
     """Get upcoming appointments for a patient."""
-    from datetime import datetime
-    now = datetime.now()
+    from datetime import datetime, timezone, timedelta
+    import os
+    
+    try:
+        offset_hours = float(os.getenv("PRACTICE_TZ_OFFSET", "0"))
+    except ValueError:
+        offset_hours = 0
+        
+    practice_tz = timezone(timedelta(hours=offset_hours))
+    now = datetime.now(practice_tz)
     today = now.date()
     current_time = now.time()
 
