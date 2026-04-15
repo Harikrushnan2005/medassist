@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, Boolean, Text, Enum, ForeignKey, TIMESTAMP, Float
+from sqlalchemy import Column, Integer, String, Date, Time, Boolean, Text, Enum, ForeignKey, TIMESTAMP, Float, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -34,6 +34,9 @@ class Provider(Base):
 
 class AvailableSlot(Base):
     __tablename__ = "available_slots"
+    __table_args__ = (
+        UniqueConstraint('provider_id', 'slot_date', 'slot_time', name='_provider_slot_uc'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     provider_id = Column(Integer, ForeignKey("providers.id"), nullable=False)

@@ -23,6 +23,7 @@ def get_available_slots(
     
     if existing_unbooked_slots < 50: # Proactive buffer to ensure we always have enough slots
         from datetime import time, timedelta
+        from sqlalchemy.exc import IntegrityError
         import models
         providers = db.query(models.Provider).all()
         
@@ -33,19 +34,26 @@ def get_available_slots(
             slot_date = today + timedelta(days=i)
             for p in providers:
                 for s_time in session_times:
-                    exists = db.query(models.AvailableSlot).filter_by(
-                        provider_id=p.id, 
-                        slot_date=slot_date, 
-                        slot_time=s_time
-                    ).first()
-                    
-                    if not exists:
-                        db.add(models.AvailableSlot(
+                    try:
+                        # Even with the existence check, concurrent requests might cause duplicates
+                        # The UniqueConstraint in models.py and this try-except will catch them
+                        exists = db.query(models.AvailableSlot).filter_by(
                             provider_id=p.id, 
                             slot_date=slot_date, 
-                            slot_time=s_time,
-                            is_urgent_eligible=False # No longer used for logic, setting default
-                        ))
+                            slot_time=s_time
+                        ).first()
+                        
+                        if not exists:
+                            db.add(models.AvailableSlot(
+                                provider_id=p.id, 
+                                slot_date=slot_date, 
+                                slot_time=s_time,
+                                is_urgent_eligible=False
+                            ))
+                            db.flush() # Try to push the insert
+                    except IntegrityError:
+                        db.rollback() # Roll back only the failed insert
+                        continue # Skip to the next slot
         db.commit()
 
     now = datetime.now()
