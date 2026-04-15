@@ -13,6 +13,13 @@ SMTP_USER = os.getenv("SMTP_USER", "").strip()
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").strip()
 EMAIL_FROM = os.getenv("EMAIL_FROM", "").strip()
 
+# Production Diagnostic
+SMTP_CONFIG_READY = all([SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, EMAIL_FROM])
+print(f"📧 Email Service: {'READY' if SMTP_CONFIG_READY else 'MISSING CONFIG'}")
+if not SMTP_CONFIG_READY:
+    missing = [k for k, v in {"SMTP_SERVER": SMTP_SERVER, "SMTP_PORT": SMTP_PORT, "SMTP_USER": SMTP_USER, "SMTP_PASSWORD": SMTP_PASSWORD, "EMAIL_FROM": EMAIL_FROM}.items() if not v]
+    print(f"   Missing fields: {missing}")
+
 def send_confirmation_email(recipient_email: str, appointment_details: dict, msg_type: str = "scheduled"):
     """
     Sends a real email using SMTP if credentials are provided.

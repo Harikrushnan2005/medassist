@@ -9,6 +9,13 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 
+# Production Diagnostic
+SMS_CONFIG_READY = all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER])
+print(f"📱 SMS Service: {'READY' if SMS_CONFIG_READY else 'MISSING CONFIG'}")
+if not SMS_CONFIG_READY:
+    missing = [k for k, v in {"TWILIO_ACCOUNT_SID": TWILIO_ACCOUNT_SID, "TWILIO_AUTH_TOKEN": TWILIO_AUTH_TOKEN, "TWILIO_PHONE_NUMBER": TWILIO_PHONE_NUMBER}.items() if not v]
+    print(f"   Missing fields: {missing}")
+
 def send_confirmation_sms(phone_number: str, appointment_details: dict, msg_type: str = "scheduled"):
     """
     Sends a real SMS using Twilio if credentials are provided.
