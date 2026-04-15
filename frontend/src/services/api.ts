@@ -1,14 +1,20 @@
 export const getApiBase = () => {
   let url = import.meta.env.VITE_API_URL;
-  if (!url) return "/api";
+  
+  if (!url) {
+    if (import.meta.env.PROD) {
+      console.warn("⚠️ VITE_API_URL is NOT set in production environment. API calls WILL fail if backend is on a different domain.");
+    }
+    return "/api";
+  }
   
   // Fix for Render providing internal hostnames without TLD
-  if (!url.includes(".") && !url.includes("localhost")) {
+  if (!url.includes(".") && !url.includes("localhost") && !url.startsWith("http")) {
     url = `${url}.onrender.com`;
   }
 
-  if (url.startsWith("http")) return url + "/api";
-  return `https://${url}/api`;
+  if (url.startsWith("http")) return url.replace(/\/+$/, '') + "/api";
+  return `https://${url.replace(/\/+$/, '')}/api`;
 };
 export const API_BASE = getApiBase();
 

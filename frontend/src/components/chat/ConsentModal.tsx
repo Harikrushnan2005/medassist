@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_BASE } from "@/services/api";
 
 interface ConsentModalProps {
   isOpen: boolean;
@@ -148,7 +149,8 @@ export function ConsentModal({ isOpen, onClose, onComplete, patientName }: Conse
     if (isOpen) {
       const fetchTemplates = async () => {
         try {
-          const res = await fetch("/api/consent-forms");
+          // Use API_BASE to ensure we hit the backend directly (Cross-Origin)
+          const res = await fetch(`${API_BASE}/consent-forms`);
           if (res.ok) {
             const data = await res.json();
             setFormTemplates(data);
