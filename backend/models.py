@@ -29,7 +29,7 @@ class Provider(Base):
     specialty = Column(String(100))
     is_active = Column(Boolean, default=True)
 
-    slots = relationship("AvailableSlot", back_populates="provider")
+    slots = relationship("AvailableSlot", back_populates="provider", cascade="all, delete-orphan")
 
 
 class AvailableSlot(Base):
@@ -46,7 +46,7 @@ class AvailableSlot(Base):
     is_urgent_eligible = Column(Boolean, default=False)
 
     provider = relationship("Provider", back_populates="slots")
-    appointment = relationship("Appointment", back_populates="slot", uselist=False)
+    appointment = relationship("Appointment", back_populates="slot", uselist=False, cascade="all, delete-orphan")
 
 
 class Appointment(Base):
