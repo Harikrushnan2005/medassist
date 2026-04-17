@@ -17,7 +17,10 @@ import {
   ShieldCheck,
   FileCheck,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Menu
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ProviderRulesDashboard, BAAComplianceDashboard, ConsentFormDashboard } from "@/components/chat/AdminDashboards";
@@ -34,6 +37,7 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
   // LIVE CHAT STATES
   const [activeRooms, setActiveRooms] = useState<string[]>([]);
@@ -234,66 +238,85 @@ function AdminPortal({ nested = false }: { nested?: boolean }) {
     <div className={`${nested ? 'bg-transparent' : 'min-h-screen bg-[#0a0b0f]'} text-slate-300 font-sans flex`}>
       {/* Sidebar */}
       {!nested && (
-        <aside className="w-64 border-r border-[#1c1c24] hidden lg:flex flex-col bg-[#0d0e14] p-6 shrink-0">
-          <div className="flex items-center gap-3 mb-12 ml-2">
-            <div className="h-8 w-8 bg-teal-500 rounded-lg flex items-center justify-center">
+        <aside 
+          className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} border-r border-[#1c1c24] hidden lg:flex flex-col bg-[#0d0e14] p-4 shrink-0 transition-all duration-300 relative`}
+        >
+          {/* Collapse Toggle */}
+          <button 
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="absolute -right-3 top-20 h-6 w-6 bg-teal-500 rounded-full border border-[#1c1c24] flex items-center justify-center text-slate-950 z-10 hover:bg-teal-400 transition-colors shadow-lg"
+          >
+            {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+
+          <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} mb-12 mt-2 px-2`}>
+            <div className="h-8 w-8 bg-teal-500 rounded-lg flex items-center justify-center shrink-0">
               <Activity className="h-5 w-5 text-white" />
             </div>
-            <span className="text-lg font-bold text-white tracking-tight">MedAssist <span className="text-teal-500 text-xs uppercase ml-1">Admin</span></span>
+            {!isSidebarCollapsed && (
+              <motion.span 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-lg font-bold text-white tracking-tight truncate"
+              >
+                MedAssist <span className="text-teal-500 text-xs uppercase ml-1">Admin</span>
+              </motion.span>
+            )}
           </div>
 
-          <nav className="space-y-2 flex-1">
-            <div 
-              onClick={() => setActiveTab("dashboard")}
-              className={`px-4 py-2 ${activeTab === 'dashboard' ? 'bg-teal-500/10 text-teal-400' : 'hover:bg-[#16161e] text-slate-500 hover:text-slate-300'} rounded-xl flex items-center gap-3 font-semibold text-sm transition-colors cursor-pointer`}
-            >
-              <LayoutDashboard className="h-4 w-4" /> Dashboard
-            </div>
-            <div 
-              onClick={() => setActiveTab("live_chat")}
-              className={`px-4 py-2 ${activeTab === 'live_chat' ? 'bg-teal-500/10 text-teal-400' : 'hover:bg-[#16161e] text-slate-500 hover:text-slate-300'} rounded-xl flex items-center justify-between font-semibold text-sm transition-colors cursor-pointer`}
-            >
-              <div className="flex items-center gap-3">
-                <MessageSquare className="h-4 w-4" /> Live Chats
-              </div>
-              {activeTab !== "live_chat" && activeRooms.length > 0 && (
-                <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">{activeRooms.length}</span>
+          <nav className="space-y-2 flex-1 px-1">
+            <SidebarItem 
+              icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} 
+              label="Dashboard" 
+              active={activeTab === 'dashboard'} 
+              collapsed={isSidebarCollapsed}
+              onClick={() => setActiveTab("dashboard")} 
+            />
+            <div className="relative group/nav">
+              <SidebarItem 
+                icon={<MessageSquare className="h-4 w-4 shrink-0" />} 
+                label="Live Chats" 
+                active={activeTab === 'live_chat'} 
+                collapsed={isSidebarCollapsed}
+                onClick={() => setActiveTab("live_chat")} 
+              />
+              {activeRooms.length > 0 && (
+                <span className={`absolute ${isSidebarCollapsed ? 'top-1 right-1' : 'top-1/2 -translate-y-1/2 right-4'} bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full animate-pulse z-10`}>
+                  {activeRooms.length}
+                </span>
               )}
             </div>
-            <div 
-              onClick={() => setActiveTab("provider_rules")}
-              className={`px-4 py-2 ${activeTab === 'provider_rules' ? 'bg-teal-500/10 text-teal-400' : 'hover:bg-[#16161e] text-slate-500 hover:text-slate-300'} rounded-xl flex items-center gap-3 font-semibold text-sm transition-colors cursor-pointer`}
-            >
-              <ShieldCheck className="h-4 w-4" /> Provider Rules
-            </div>
-            <div 
-              onClick={() => setActiveTab("baa")}
-              className={`px-4 py-2 ${activeTab === 'baa' ? 'bg-teal-500/10 text-teal-400' : 'hover:bg-[#16161e] text-slate-500 hover:text-slate-300'} rounded-xl flex items-center gap-3 font-semibold text-sm transition-colors cursor-pointer`}
-            >
-              <FileCheck className="h-4 w-4" /> BAA & Compliance
-            </div>
-            <div 
-              onClick={() => setActiveTab("consent_forms")}
-              className={`px-4 py-2 ${activeTab === 'consent_forms' ? 'bg-teal-500/10 text-teal-400' : 'hover:bg-[#16161e] text-slate-500 hover:text-slate-300'} rounded-xl flex items-center gap-3 font-semibold text-sm transition-colors cursor-pointer`}
-            >
-              <FileCheck className="h-4 w-4" /> Consent Forms
-            </div>
-            <div className="px-4 py-2 hover:bg-[#16161e] text-slate-500 hover:text-slate-300 rounded-xl flex items-center gap-3 font-semibold text-sm transition-colors cursor-pointer">
-              <Calendar className="h-4 w-4" /> Schedule
-            </div>
-            <div className="px-4 py-2 hover:bg-[#16161e] text-slate-500 hover:text-slate-300 rounded-xl flex items-center gap-3 font-semibold text-sm transition-colors cursor-pointer">
-              <Users className="h-4 w-4" /> Patients
-            </div>
-            <div className="px-4 py-2 hover:bg-[#16161e] text-slate-500 hover:text-slate-300 rounded-xl flex items-center gap-3 font-semibold text-sm transition-colors cursor-pointer">
-              <CreditCard className="h-4 w-4" /> Billing
-            </div>
+            <SidebarItem 
+              icon={<ShieldCheck className="h-4 w-4 shrink-0" />} 
+              label="Provider Rules" 
+              active={activeTab === 'provider_rules'} 
+              collapsed={isSidebarCollapsed}
+              onClick={() => setActiveTab("provider_rules")} 
+            />
+            <SidebarItem 
+              icon={<FileCheck className="h-4 w-4 shrink-0" />} 
+              label="BAA & Compliance" 
+              active={activeTab === 'baa'} 
+              collapsed={isSidebarCollapsed}
+              onClick={() => setActiveTab("baa")} 
+            />
+            <SidebarItem 
+              icon={<FileCheck className="h-4 w-4 shrink-0" />} 
+              label="Consent Forms" 
+              active={activeTab === 'consent_forms'} 
+              collapsed={isSidebarCollapsed}
+              onClick={() => setActiveTab("consent_forms")} 
+            />
+            <SidebarItem icon={<Calendar className="h-4 w-4 shrink-0" />} label="Schedule" collapsed={isSidebarCollapsed} />
+            <SidebarItem icon={<Users className="h-4 w-4 shrink-0" />} label="Patients" collapsed={isSidebarCollapsed} />
+            <SidebarItem icon={<CreditCard className="h-4 w-4 shrink-0" />} label="Billing" collapsed={isSidebarCollapsed} />
           </nav>
 
           <button 
             onClick={() => { sessionStorage.removeItem(ADMIN_STORAGE_KEY); setIsAuthenticated(false); }}
-            className="mt-auto px-4 py-3 flex items-center gap-3 text-slate-500 hover:text-red-400 transition-colors font-bold text-xs uppercase tracking-widest"
+            className={`mt-auto px-4 py-3 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} text-slate-500 hover:text-red-400 transition-colors font-bold text-xs uppercase tracking-widest`}
           >
-            <LogOut className="h-4 w-4" /> Sign Out
+            <LogOut className="h-4 w-4 shrink-0" /> {!isSidebarCollapsed && <span className="truncate">Sign Out</span>}
           </button>
         </aside>
       )}
@@ -539,6 +562,32 @@ function StatCard({ title, value, trend, icon }: any) {
       <div className="absolute -bottom-2 -right-2 opacity-[0.02] group-hover:opacity-10 transition-opacity">
         <LayoutDashboard className="h-32 w-32" />
       </div>
+    </div>
+  );
+}
+
+function SidebarItem({ icon, label, active = false, collapsed = false, onClick }: any) {
+  return (
+    <div 
+      onClick={onClick}
+      title={collapsed ? label : ""}
+      className={`px-4 py-2 ${active ? 'bg-teal-500/10 text-teal-400' : 'hover:bg-[#16161e] text-slate-500 hover:text-slate-300'} rounded-xl flex items-center ${collapsed ? 'justify-center' : 'gap-3'} font-semibold text-sm transition-all cursor-pointer group relative`}
+    >
+      {icon}
+      {!collapsed && (
+        <motion.span 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="truncate"
+        >
+          {label}
+        </motion.span>
+      )}
+      {collapsed && (
+        <div className="absolute left-full ml-4 px-3 py-2 bg-[#16161e] text-white text-[10px] font-bold uppercase tracking-widest rounded-lg border border-[#292e42] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+          {label}
+        </div>
+      )}
     </div>
   );
 }
