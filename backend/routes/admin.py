@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_, and_
 from database import get_db
 from models import Appointment, Patient, AvailableSlot, Provider, Invoice, AuditLog, ConsentForm
@@ -151,7 +151,9 @@ def get_provider_slots(provider_id: int, db: Session = Depends(get_db), verified
     today = pn.date()
     current_time = pn.time()
 
-    slots = db.query(AvailableSlot).filter(
+    slots = db.query(AvailableSlot).options(
+        joinedload(AvailableSlot.appointment).joinedload(Appointment.patient)
+    ).filter(
         AvailableSlot.provider_id == provider_id,
         or_(
             AvailableSlot.slot_date > today,
@@ -161,12 +163,24 @@ def get_provider_slots(provider_id: int, db: Session = Depends(get_db), verified
             )
         )
     ).order_by(AvailableSlot.slot_date, AvailableSlot.slot_time).all()
-    return [{
-        "id": s.id, 
-        "date": s.slot_date.isoformat(), 
-        "time": s.slot_time.isoformat(), 
-        "is_booked": s.is_booked
-    } for s in slots]
+
+    response = []
+    for s in slots:
+        slot_data = {
+            "id": s.id, 
+            "date": s.slot_date.isoformat(), 
+            "time": s.slot_time.isoformat(), 
+            "is_booked": s.is_booked
+        }
+        if s.is_booked and s.appointment:
+            slot_data.update({
+                "patient_name": f"{s.appointment.patient.first_name} {s.appointment.patient.last_name}",
+                "visit_type": s.appointment.visit_type,
+                "reason": s.appointment.reason
+            })
+        response.append(slot_data)
+        
+    return response
 
 @router.post("/slots")
 def add_manual_slot(payload: Dict[str, Any], request: Request, db: Session = Depends(get_db), verified: bool = Depends(verify_admin)):

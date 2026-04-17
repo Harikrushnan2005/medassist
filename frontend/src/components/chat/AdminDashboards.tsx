@@ -218,46 +218,101 @@ export function ProviderRulesDashboard() {
                             }, {})
                           )
                           .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
-                          .map(([date, slots]: [string, any]) => (
-                            <div key={date} className="border border-[#292e42] rounded-2xl overflow-hidden bg-[#1a1b26]/30">
-                               <div className="bg-[#1a1b26] p-4 px-6 border-b border-[#292e42] flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                     <CalendarDays className="w-4 h-4 text-teal-500" />
-                                     <span className="text-xs font-bold text-white uppercase tracking-wider">
-                                        {format(parseISO(date), "EEEE, MMMM d, yyyy")}
-                                     </span>
+                          .map(([date, daySlots]: [string, any]) => {
+                             const availableSlots = daySlots.filter((s: any) => !s.is_booked);
+                             const bookedSlots = daySlots.filter((s: any) => s.is_booked);
+                             
+                             return (
+                               <div key={date} className="border border-[#292e42] rounded-3xl overflow-hidden bg-[#1a1b26]/30 mb-8 last:mb-0">
+                                  <div className="bg-[#1a1b26] p-4 px-8 border-b border-[#292e42] flex items-center justify-between">
+                                     <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-teal-500/10 rounded-lg">
+                                           <CalendarDays className="w-4 h-4 text-teal-500" />
+                                        </div>
+                                        <div>
+                                           <span className="text-xs font-bold text-white uppercase tracking-wider block leading-none mb-1">
+                                              {format(parseISO(date), "EEEE, MMMM d, yyyy")}
+                                           </span>
+                                           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">
+                                              {daySlots.length} Total Slots
+                                           </span>
+                                        </div>
+                                     </div>
+                                     <button 
+                                       onClick={async () => {
+                                         if (confirm(`Delete all ${availableSlots.length} available slots for ${date}?`)) {
+                                             for(const s of availableSlots) {
+                                               await handleDeleteSlot(s.id, provider.id);
+                                             }
+                                         }
+                                       }}
+                                       disabled={availableSlots.length === 0}
+                                       className="text-[10px] font-bold text-red-500/70 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2 transition-all uppercase tracking-widest px-4 py-2 hover:bg-red-500/10 rounded-xl"
+                                     >
+                                        <Trash2 className="w-3.5 h-3.5" /> Purge Available
+                                     </button>
                                   </div>
-                                  <button 
-                                    onClick={async () => {
-                                      if (confirm(`Delete all ${slots.length} slots for ${date}?`)) {
-                                          for(const s of slots) {
-                                            if(!s.is_booked) await handleDeleteSlot(s.id, provider.id);
-                                          }
-                                      }
-                                    }}
-                                    className="text-[10px] font-bold text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors uppercase tracking-widest"
-                                  >
-                                     <Trash2 className="w-3 h-3" /> Purge Day
-                                  </button>
+                                  
+                                  <div className="p-8">
+                                     {/* Available Slots Grid */}
+                                     <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 block ml-1 flex items-center gap-2">
+                                           <Clock className="w-3 h-3" /> Available Inventory ({availableSlots.length})
+                                        </label>
+                                        {availableSlots.length === 0 ? (
+                                           <div className="p-6 border border-[#292e42] border-dashed rounded-2xl text-center text-slate-500 text-xs italic">
+                                              No available slots remaining for this day.
+                                           </div>
+                                        ) : (
+                                           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                                              {availableSlots.map((slot: any) => (
+                                                <div key={slot.id} className="p-3 bg-[#1c1d29] border border-[#292e42] rounded-2xl text-center transition-all flex flex-col gap-1 relative group/slot hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/5 cursor-default">
+                                                   <div className="text-xs font-mono font-bold text-teal-400">{slot.time.slice(0, 5)}</div>
+                                                   <button 
+                                                     onClick={() => handleDeleteSlot(slot.id, provider.id)}
+                                                     className="absolute -top-1.5 -right-1.5 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover/slot:opacity-100 transition-opacity shadow-lg hover:bg-red-600 active:scale-90"
+                                                   >
+                                                      <X className="w-2.5 h-2.5" />
+                                                   </button>
+                                                </div>
+                                              ))}
+                                           </div>
+                                        )}
+                                     </div>
+
+                                     {/* Booked Appointments Section */}
+                                     {bookedSlots.length > 0 && (
+                                        <div className="mt-8 pt-8 border-t border-[#292e42]">
+                                           <label className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-4 block ml-1 flex items-center gap-2">
+                                              <Users className="w-3 h-3" /> Booked Appointments ({bookedSlots.length})
+                                           </label>
+                                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                              {bookedSlots.map((slot: any) => (
+                                                <div key={slot.id} className="bg-[#24283b]/30 border border-[#292e42] rounded-2xl p-4 flex items-center gap-4 group/booked hover:bg-[#24283b]/50 transition-colors">
+                                                   <div className="h-10 w-10 bg-teal-500/10 rounded-xl flex items-center justify-center shrink-0">
+                                                      <Clock className="w-5 h-5 text-teal-500/70" />
+                                                   </div>
+                                                   <div className="flex-1 min-w-0">
+                                                      <div className="flex items-center justify-between mb-0.5">
+                                                         <span className="text-sm font-bold text-white truncate">{slot.patient_name || "Reserved Slot"}</span>
+                                                         <span className="text-[11px] font-mono font-bold text-teal-500 bg-teal-500/10 px-2 rounded-lg">{slot.time.slice(0, 5)}</span>
+                                                      </div>
+                                                      <div className="flex items-center gap-2">
+                                                         <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase ${slot.visit_type === 'telehealth' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-orange-500/10 text-orange-400'}`}>
+                                                            {slot.visit_type || 'Manual'}
+                                                         </span>
+                                                         {slot.reason && <span className="text-[10px] text-slate-500 truncate italic">"{slot.reason}"</span>}
+                                                      </div>
+                                                   </div>
+                                                </div>
+                                              ))}
+                                           </div>
+                                        </div>
+                                     )}
+                                  </div>
                                </div>
-                               <div className="p-6 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                                  {slots.map((slot: any) => (
-                                    <div key={slot.id} className={`p-3 rounded-xl border text-center transition-all flex flex-col gap-1 relative group/slot ${slot.is_booked ? 'bg-slate-800/50 border-slate-700 text-slate-500 opacity-50' : 'bg-[#1c1d29] border-[#292e42] text-slate-300 hover:border-teal-500/50'}`}>
-                                       <div className="text-xs font-mono font-bold text-teal-400">{slot.time.slice(0, 5)}</div>
-                                       {!slot.is_booked && (
-                                         <button 
-                                           onClick={() => handleDeleteSlot(slot.id, provider.id)}
-                                           className="absolute -top-1 -right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/slot:opacity-100 transition-opacity shadow-lg"
-                                         >
-                                            <X className="w-2.5 h-2.5" />
-                                         </button>
-                                       )}
-                                       {slot.is_booked && <div className="text-[8px] font-black uppercase text-slate-500">Booked</div>}
-                                    </div>
-                                  ))}
-                               </div>
-                            </div>
-                          ))
+                             );
+                          })
                        )}
                     </div>
                  </motion.div>
